@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Header -->
+<header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">Edit Product</h1>
+            <p class="lead fw-normal text-white-50 mb-0">Modify the details of the product: {{ form.instance.name }}</p>
+        </div>
+    </div>
+</header>
+
+<!-- Form Container -->
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <form method="post" enctype="multipart/form-data" class="mt-5">
+                {% csrf_token %}
+                
+                <!-- Dynamic Form Fields -->
+                {% for field in form %}
+                    <div class="form-floating mb-3">
+                        {{ field }}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {% if field.errors %}
+                            <div class="text-danger">{{ field.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

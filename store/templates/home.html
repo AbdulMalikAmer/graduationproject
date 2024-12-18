@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Header-->
+<header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">إيجـاري</h1>
+            <p class="lead fw-normal text-white-50 mb-0">استكشف الموقع واكتشف أفضل خيارات الإيجار بسهولة</p>
+        </div>
+    </div>
+</header>
+
+<!-- Section-->
+<section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+            {% for product in products %}
+            <div class="col mb-5">
+                <div class="card h-100">
+                    <!-- Sale badge-->
+                    {% if product.is_sale %}
+                    <div class="badge bg-dark text-white position-absolute" style="top: 0.5rem; right: 0.5rem">Sale</div>
+                    {% endif %}
+
+                    <!-- Product image-->
+                    <img class="card-img-top" src="{{ product.image.url }}" alt="{{ product.name }}" />
+
+                    <!-- Product details-->
+                    <div class="card-body p-4">
+                        <div class="text-center">
+                            <!-- Product name-->
+                            <h5 class="fw-bolder">{{ product.name }}</h5>
+                            <!-- Product price-->
+                            {% if product.is_sale %}
+                            <strike>${{ product.price }}</strike> ${{ product.sale_price }}
+                            {% else %}
+                            ${{ product.price }}
+                            {% endif %}
+                            <!-- City -->
+                            {% if product.city %}
+                            <p class="text-muted mt-2">في {{ product.city.name }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Product actions-->
+                    <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                        <div class="text-center">
+                            <a class="btn btn-outline-dark mt-auto" href="{% url 'product' product.id %}">عرض المنتج</a>
+                            {% if user.is_authenticated and product.user == user %}
+                            <a class="btn btn-outline-dark mt-auto" href="{% url 'edit_product' product.id %}">تعديل المنتج</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% if user.is_authenticated %}
+<!-- Floating Button for Adding Product -->
+<a href="{% url 'add_product' %}" class="floating-btn" title="إضافة منتج">
+    <span class="floating-btn-icon">+</span>
+</a>
+{% endif %}
+
+<!-- Floating Button Style -->
+<style>
+    .floating-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        font-size: 24px;
+        line-height: 60px;
+        text-decoration: none;
+        z-index: 1000;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .floating-btn:hover {
+        background-color: #0056b3;
+        transform: scale(1.1);
+    }
+
+    .floating-btn-icon {
+        display: inline-block;
+    }
+
+    .floating-btn:hover::after {
+        content: "إضافة منتج";
+        position: absolute;
+        right: 70px;
+        bottom: 30px;
+        background-color: #007bff;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        white-space: nowrap;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+</style>
+{% endblock %}

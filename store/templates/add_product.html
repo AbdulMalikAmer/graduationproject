@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Header -->
+<header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">Add New Product</h1>
+            <p class="lead fw-normal text-white-50 mb-0">Create a new product listing...</p>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <br/><br/>
+            <!-- Form -->
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Loop through fields to apply the same styling -->
+                {% for field in form %}
+                    <div class="form-floating mb-3">
+                        {{ field }}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {% if field.errors %}
+                            <div class="text-danger">{{ field.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <!-- Submit button -->
+                <button type="submit" class="btn btn-secondary">Add Product</button>
+            </form>
+
+            <br/><br/>
+            <!-- Back to home button -->
+            <a href="{% url 'home' %}" class="btn btn-secondary">Back to Home</a>
+
+            <br/><br/><br/><br/>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

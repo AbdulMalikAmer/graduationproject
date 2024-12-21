@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h3>صندوق الرسائل</h3>
+    <div class="list-group">
+        {% for msg in messages %}
+            <a href="{% url 'chat' msg.product.id msg.sender.id %}" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ msg.product.name }}</h5>
+                    <small>{{ msg.timestamp|date:"Y-m-d H:i" }}</small>
+                </div>
+                <p class="mb-1"><strong>{{ msg.sender.username }}:</strong> {{ msg.message|truncatewords:10 }}</p>
+            </a>
+        {% empty %}
+            <p>لا توجد محادثات حتى الآن</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -5,8 +5,8 @@
 <header class="bg-dark py-5">
     <div class="container px-4 px-lg-5 my-5">
         <div class="text-center text-white">
-            <h1 class="display-4 fw-bolder">Search Products</h1>
-            <p class="lead fw-normal text-white-50 mb-0">Find What You're Looking For...</p>
+            <h1 class="display-4 fw-bolder">بحث</h1>
+            <p class="lead fw-normal text-white-50 mb-0">اعثر على ما تبحث عنه</p>
         </div>
     </div>
 </header>
@@ -18,24 +18,24 @@
                 <br/><br/>
                 <div class="card">
                     <div class="card-header">
-                        Search Products
+                        بحث عن اعلان
                     </div>
                     <div class="card-body">
                         <form method="POST" action="{% url 'search' %}">
                             {% csrf_token %}
                             <div class="mb-3">
-                                <input type="text" class="form-control" placeholder="Search For Products" name="searched" value="{{ query }}">
+                                <input type="text" class="form-control" placeholder="فندق، شقة، استوديو، منتجع، استراحة" name="searched" value="{{ query }}">
                             </div>
                             <div class="mb-3">
                                 <select name="city" class="form-control">
-                                    <option value="">All Cities</option>
+                                    <option value="">جميع المدن</option>
                                     {% for city in cities %}
                                     <option value="{{ city.name }}" {% if selected_city == city.name %}selected{% endif %}>{{ city.name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-secondary">
-                                Search Products
+                                بحث
                             </button>
                         </form>
                     </div>

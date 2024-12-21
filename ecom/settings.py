@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'payment',
     'whitenoise.runserver_nostatic',
     'paypal.standard.ipn',
+
 ]
 
 MIDDLEWARE = [
@@ -69,6 +70,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'cart.context_processors.cart',
                 'store.views.categories_processor',
+                'store.views.base_context',
 
             ],
         },

@@ -5,10 +5,11 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .forms import SignUpForm, UpdateUserForm, ChangePasswordForm, UserInfoForm
-
+from django.db.models import Max
 from payment.forms import ShippingForm
 from payment.models import ShippingAddress
-
+from .models import Product, Review
+from .forms import ReviewForm
 from django import forms
 from django.db.models import Q
 import json
@@ -16,6 +17,8 @@ from cart.cart import Cart
 
 from django.contrib.auth.decorators import login_required
 from .forms import ProductForm
+from .models import ChatMessage
+
 
 @login_required
 def add_product(request):
@@ -37,9 +40,9 @@ from django.shortcuts import get_object_or_404
 def edit_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
-    # تحقق أن المستخدم الحالي هو من أضاف المنتج
+    # تحقق أن المستخدم الحالي هو من أضاف الإعلان
     if product.user != request.user:
-        return HttpResponseForbidden("لا يمكنك تعديل هذا المنتج.")
+        return HttpResponseForbidden("لا يمكنك تعديل هذا الإعلان.")
 
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES, instance=product)
@@ -238,3 +241,96 @@ def categories_processor(request):
     return {
         'categories': Category.objects.all()
     }
+    
+
+
+@login_required
+def chat(request, product_id, receiver_id):
+    product = get_object_or_404(Product, id=product_id)
+    receiver = get_object_or_404(User, id=receiver_id)
+
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        if message:
+            ChatMessage.objects.create(
+                product=product,
+                sender=request.user,
+                receiver=receiver,
+                message=message
+            )
+            return redirect('chat', product_id=product.id, receiver_id=receiver.id)
+
+    messages = ChatMessage.objects.filter(product=product, sender__in=[request.user, receiver], receiver__in=[request.user, receiver]).order_by('timestamp')
+    
+    return render(request, 'chat.html', {'product': product, 'messages': messages, 'receiver': receiver})
+
+
+@login_required
+def inbox(request):
+    user_products = Product.objects.filter(user=request.user)
+    
+    # استعلام لتجميع المحادثات حسب آخر رسالة
+    messages = ChatMessage.objects.filter(product__in=user_products).values(
+        'product', 'sender'
+    ).annotate(last_message=Max('timestamp')).order_by('-last_message')
+
+    # جلب التفاصيل الكاملة لآخر رسالة
+    last_messages = ChatMessage.objects.filter(
+        timestamp__in=[msg['last_message'] for msg in messages]
+    ).select_related('product', 'sender')
+    
+    context = {
+        'messages': last_messages,
+    }
+    return render(request, 'inbox.html', context)
+
+
+from .models import ChatMessage
+
+def base_context(request):
+    if request.user.is_authenticated:
+        unread_count = ChatMessage.objects.filter(receiver=request.user, is_read=False).count()
+    else:
+        unread_count = 0
+    return {'unread_count': unread_count}
+
+
+
+def cart_add(request):
+    cart = Cart(request)
+    
+    if request.method == 'POST' and request.POST.get('action') == 'post':
+        product_id = request.POST.get('product_id')
+        product_qty = int(request.POST.get('product_qty'))
+        product = get_object_or_404(Product, id=product_id)
+        
+        cart.add(product=product, quantity=product_qty)
+        
+        return JsonResponse({'qty': cart.__len__()})
+    
+    # في حالة طلب GET، أرجع استجابة افتراضية
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def add_review(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.product = product
+            review.user = request.user
+            review.save()
+            return redirect('product', pk=product.id)
+    else:
+        form = ReviewForm()
+    
+    return render(request, 'product.html', {'form': form, 'product': product})
+
+
+# views.py - تعديل عرض الصفحة الرئيسية
+from django.db.models import Avg
+
+def home(request):
+    products = Product.objects.annotate(avg_rating=Avg('reviews__rating')).order_by('-avg_rating')
+    return render(request, 'home.html', {'products': products})

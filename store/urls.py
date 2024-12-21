@@ -15,7 +15,10 @@ urlpatterns = [
     path('category/<str:foo>', views.category, name='category'),
     path('category_summary/', views.category_summary, name='category_summary'),
     path('search/', views.search, name='search'),
-    path('product/new/', add_product, name='add_product'),  # صفحة إضافة منتج جديد
-    path('product/<int:product_id>/edit/', edit_product, name='edit_product'),  # تعديل المنتج
+    path('product/new/', add_product, name='add_product'),  # صفحة إضافة إعلان جديد
+    path('product/<int:product_id>/edit/', edit_product, name='edit_product'),  # تعديل الإعلان
+    path('chat/<int:product_id>/<int:receiver_id>/', views.chat, name='chat'),
+    path('inbox/', views.inbox, name='inbox'),
     
+
 ]

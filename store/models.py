@@ -2,6 +2,8 @@ from django.db import models
 import datetime
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
+from django.core.validators import RegexValidator
+
 
 
 # Create Customer Profile
@@ -75,9 +77,18 @@ class Product(models.Model):
 	# Add Sale Stuff
 	is_sale = models.BooleanField(default=False)
 	sale_price = models.DecimalField(default=0, decimal_places=2, max_digits=6)
-	user = models.ForeignKey(User, on_delete=models.CASCADE)  # المستخدم الذي أضاف المنتج
+	user = models.ForeignKey(User, on_delete=models.CASCADE)  # المستخدم الذي أضاف الإعلان
 	city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)  # المدينة
-
+	phone_number = models.CharField(
+			max_length=10,
+			validators=[
+				RegexValidator(
+					regex=r'^(092|091|094|093)\d{7}$',
+					message="Phone number must start with 092, 091, 094, or 093 and be 10 digits long."
+				)
+			],
+			help_text="Enter a valid phone number starting with 092, 091, 094, or 093."
+		)
 
 	def __str__(self):
 		return self.name
@@ -95,3 +106,30 @@ class Order(models.Model):
 
 	def __str__(self):
 		return self.product
+
+
+
+class ChatMessage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+   		 return f'{self.sender.username}: {self.message[:30]}...'
+
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.PositiveIntegerField()
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['product', 'user']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.product.name} - {self.rating} Stars"

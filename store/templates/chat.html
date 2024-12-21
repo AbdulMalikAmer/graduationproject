@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h3>الدردشة حول إعلان: {{ product.name }}</h3>
+    <div class="chat-box border p-3" style="height: 400px; overflow-y: scroll;">
+        {% for msg in messages %}
+            <div class="{% if msg.sender == request.user %}text-end{% else %}text-start{% endif %}">
+                <p><strong>{{ msg.sender.username }}:</strong> {{ msg.message }} <br> <small>{{ msg.timestamp }}</small></p>
+            </div>
+        {% endfor %}
+    </div>
+    <form method="post" class="mt-3">
+        {% csrf_token %}
+        <textarea name="message" class="form-control" rows="3" placeholder="اكتب رسالتك هنا..."></textarea>
+        <button type="submit" class="btn btn-success mt-2">إرسال</button>
+    </form>
+</div>
+{% endblock %}

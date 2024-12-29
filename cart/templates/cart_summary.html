@@ -66,7 +66,7 @@
         {% endif %}
         
         <div class="row justify-content-center">
-            <div class="col-md-2">Quantity:</div>
+            <div class="col-md-2">الأيام:</div>
             <div class="col-md-2">
                 <input type="number" class="form-control form-control-sm" id="select{{product.id}}" min="1" value="1" readonly>
             </div>
@@ -89,7 +89,7 @@
         <button type="button" class="btn btn-secondary" onclick="this.textContent='{{ product.phone_number }}'; this.disabled=true;">
             احجز الآن
         </button>
-        <button type="button" data-index="{{product.id}}" class="btn btn-danger delete-product">Remove</button>
+        <button type="button" data-index="{{product.id}}" class="btn btn-danger delete-product">ازاله من المفضله</button>
         <button type="button" class="btn btn-primary" onclick="location.href='{% url 'chat' product.id product.user.id %}'">
             دردشة
         </button>

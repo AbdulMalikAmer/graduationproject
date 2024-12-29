@@ -14,7 +14,7 @@ from django import forms
 from django.db.models import Q
 import json
 from cart.cart import Cart
-
+from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
 from .forms import ProductForm
 from .models import ChatMessage
@@ -322,13 +322,15 @@ def rate_product(request, product_id):
 
     if request.method == 'POST':
         form = RatingForm(request.POST)
-        
         if form.is_valid():
-            rating = form.save(commit=False)
-            rating.product = product  # ربط التقييم بالمنتج
-            rating.user = request.user  # ربط التقييم بالمستخدم
-            rating.save()
-            messages.success(request, 'تم إضافة تقييمك بنجاح!')
+            try:
+                rating = form.save(commit=False)
+                rating.product = product
+                rating.user = request.user
+                rating.save()
+                messages.success(request, 'تم إضافة تقييمك بنجاح!')
+            except IntegrityError:
+                messages.warning(request, 'لقد قمت بتقييم هذا المنتج من قبل!')
             return redirect('product', pk=product.id)
         else:
             messages.error(request, 'حدث خطأ أثناء إرسال التقييم.')

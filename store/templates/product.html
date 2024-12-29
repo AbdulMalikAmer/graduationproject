@@ -44,35 +44,16 @@
             <div class="row justify-content-center">
                 <div class="col-md-2">تاريخ المغادرة:</div>
                 <div class="col-md-4">
-                    <input type="date" class="form-control form-control-sm" id="checkout-date" name="checkout-date">
+                    <input type="date" class="form-control form-control-sm" id="checkout-date" name="checkout-date" onchange="calculateDays()">
                 </div>
             </div>
-            
-            <script>
-                function updateCheckoutMinDate() {
-                    const checkinDate = document.getElementById('checkin-date').value;
-                    const checkoutDate = document.getElementById('checkout-date');
-            
-                    if (checkinDate) {
-                        checkoutDate.min = checkinDate;
-                        if (checkoutDate.value < checkinDate) {
-                            checkoutDate.value = '';
-                        }
-                    }
-                }
-            </script>
               <br/><br/>
-              <label for="qty-cart">الكمية:</label>
-              <select id="qty-cart" class="form-select">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-              </select>
+              <label for="qty-cart" id="days-label">عدد الأيام:</label>
+              <input type="number" id="qty-cart" class="form-control" value="1" min="1" readonly>
               <br/>
               <button type="button" class="btn btn-secondary" onclick="this.textContent='{{ product.phone_number }}'; this.disabled=true;">
                 رقم الهاتف
             </button>
-
             {% if request.user != product.user %}
     <button type="button" class="btn btn-primary" 
         onclick="location.href='{% url 'chat' product.id product.user.id %}'">
@@ -81,7 +62,6 @@
             {% else %}
     <a href="{% url 'inbox' %}" class="btn btn-info">صندوق الرسائل</a>
             {% endif %}
-
             <button type="button" value="{{ product.id }}" class="btn btn-secondary" id="add-cart">
               إضافة إلى المفضلة
           </button>  
@@ -134,12 +114,19 @@
   <!-- Add Review Form -->
   <h4>أضف تقييمك:</h4>
   {% if user.is_authenticated %}
-      <form method="post"  action="{% url 'rate_product' product.id %}" class="mt-4" >
+      <form method="post"  action="{% url 'rate_product' product.id %}" class="mt-4">
           {% csrf_token %}
           <div class="row mb-3">
               <div class="col-md-6">
                   <label for="rating">التقييم (1-5):</label>
-                  <input type="number" name="rating" class="form-control" min="1" max="5" required>
+                  <div class="star-rating">
+                      <input type="hidden" name="rating" id="rating-value" required>
+                      <span class="star" data-value="1">★</span>
+                      <span class="star" data-value="2">★</span>
+                      <span class="star" data-value="3">★</span>
+                      <span class="star" data-value="4">★</span>
+                      <span class="star" data-value="5">★</span>
+                  </div>
               </div>
               <div class="col-md-6">
                   <label for="comment">التعليق:</label>
@@ -155,23 +142,49 @@
   {% endif %}
 </div>
 
+<style>
+.star-rating .star {
+    font-size: 30px;
+    cursor: pointer;
+    color: #ddd;
+    display: inline-block;
+    transition: color 0.3s ease-in-out;
+}
+
+.star-rating .star.selected,
+.star-rating .star.hover,
+.star-rating .star:hover ~ .star {
+    color: #f5c518;
+}
+
+.star-rating .star:hover {
+    transition: color 0.6s ease-in-out;
+}
+</style>
+
 <script>
-$(document).on('click', '#add-cart', function(e){
-    e.preventDefault();
-    $.ajax({
-        type: 'POST',
-        url: '{% url 'cart_add' %}',
-        data: {
-            product_id: $('#add-cart').val(),
-            product_qty: $('#qty-cart').val(),
-            csrfmiddlewaretoken: '{{ csrf_token }}',
-            action: 'post'
-        },
-        success: function(json){
-            document.getElementById("cart_quantity").textContent = json.qty;
-            location.reload();
-        },
-        error: function(xhr, errmsg, err){}
+const stars = document.querySelectorAll('.star');
+const ratingValue = document.getElementById('rating-value');
+
+stars.forEach(star => {
+    star.addEventListener('mouseover', function() {
+        const value = this.getAttribute('data-value');
+        stars.forEach(s => {
+            s.classList.remove('hover');
+            if (s.getAttribute('data-value') <= value) {
+                s.classList.add('hover');
+            }
+        });
+    });
+    star.addEventListener('click', function() {
+        const value = this.getAttribute('data-value');
+        ratingValue.value = value;
+        stars.forEach(s => {
+            s.classList.remove('selected');
+            if (s.getAttribute('data-value')  <= value) {
+                s.classList.add('selected');
+            }
+        });
     });
 });
 </script>

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load custom_filters %}
 {% block content %}
 <!-- Header-->
 <header class="bg-dark py-5">
@@ -41,6 +41,24 @@
                             {% if product.city %}
                             <p class="text-muted mt-2">في {{ product.city.name }}</p>
                             {% endif %}
+                            
+                            <!-- Ratings -->
+                            <div class="mt-3">
+                                {% with avg=product.ratings.all|average_rating %}
+                                    {% if avg %}
+                                        {% for i in "12345"|make_list %}
+                                            {% if i|add:"0" <= avg %}
+                                                ★
+                                            {% else %}
+                                                ☆
+                                            {% endif %}
+                                        {% endfor %}
+                                        ({{ avg|floatformat:1 }})
+                                    {% else %}
+                                        ☆☆☆☆☆ (0)
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
                         </div>
                     </div>
 

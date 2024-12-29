@@ -16,28 +16,22 @@ def cart_summary(request):
 
 
 def cart_add(request):
-	# Get the cart
-	cart = Cart(request)
-	# test for POST
-	if request.POST.get('action') == 'post':
-		# Get stuff
-		product_id = int(request.POST.get('product_id'))
-		product_qty = int(request.POST.get('product_qty'))
+    cart = Cart(request)
+    if request.POST.get('action') == 'post':
+        product_id = int(request.POST.get('product_id'))
+        product_qty = int(request.POST.get('product_qty'))
 
-		# lookup product in DB
-		product = get_object_or_404(Product, id=product_id)
-		
-		# Save to session
-		cart.add(product=product, quantity=product_qty)
+        # البحث عن المنتج
+        product = get_object_or_404(Product, id=product_id)
+        
+        # إضافة المنتج إلى السلة
+        cart.add(product=product, quantity=product_qty)
+        
+        # تحديث العدد الإجمالي للعناصر في السلة
+        cart_quantity = cart.__len__()
 
-		# Get Cart Quantity
-		cart_quantity = cart.__len__()
-
-		# Return resonse
-		# response = JsonResponse({'Product Name: ': product.name})
-		response = JsonResponse({'qty': cart_quantity})
-		messages.success(request, ("Product Added To Cart..."))
-		return response
+        # إرجاع استجابة JSON
+        return JsonResponse({'qty': cart_quantity})
 
 def cart_delete(request):
 	cart = Cart(request)

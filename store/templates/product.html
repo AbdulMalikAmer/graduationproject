@@ -17,22 +17,25 @@
           <br/>
           <p class="card-text justified">{{ product.description }}</p>
           
-          {% if product.is_sale %}
-          <div class="d-flex justify-content-center small text-warning mb-2">
-                  <div class="bi-star-fill"></div>
-                  &nbsp;&nbsp;Sale!&nbsp;&nbsp;
-                  <div class="bi-star-fill"></div>
-                  </div>
-  
-                  <!-- Product price-->
-                  <strike>
-                  ${{ product.price }}
-                  </strike>
-                  &nbsp;
-                  ${{ product.sale_price }}
-          {% else %}
-              ${{ product.price }}
-          {% endif %}
+          <div id="price-container">
+            {% if product.is_sale %}
+            <div class="d-flex justify-content-center small text-warning mb-2">
+                    <div class="bi-star-fill"></div>
+                    &nbsp;&nbsp;Sale!&nbsp;&nbsp;
+                    <div class="bi-star-fill"></div>
+            </div>
+    
+            <!-- Product price-->
+            <strike>
+            ${{ product.price }}
+            </strike>
+            &nbsp;
+            <span id="dynamic-price">${{ product.sale_price }}</span>
+            {% else %}
+            <span id="dynamic-price">${{ product.price }}</span>
+            {% endif %}
+          </div>
+              
               <br/><br/>
               <div class="row justify-content-center">
                 <div class="col-md-2">تاريخ الوصول:</div>
@@ -62,9 +65,11 @@
             {% else %}
     <a href="{% url 'inbox' %}" class="btn btn-info">صندوق الرسائل</a>
             {% endif %}
-            <button type="button" value="{{ product.id }}" class="btn btn-secondary" id="add-cart">
-              إضافة إلى المفضلة
-          </button>  
+
+            
+          </button>
+          <button type="button" value="{{ product.id }}" class="btn btn-secondary" id="add-cart">Add To Cart</button>
+  
       </center>
         </div>
       </div>
@@ -110,37 +115,38 @@
   {% else %}
       <p>لا يوجد تقييمات بعد. كن أول من يقيّم!</p>
   {% endif %}
-
-  <!-- Add Review Form -->
-  <h4>أضف تقييمك:</h4>
-  {% if user.is_authenticated %}
-      <form method="post"  action="{% url 'rate_product' product.id %}" class="mt-4">
-          {% csrf_token %}
-          <div class="row mb-3">
-              <div class="col-md-6">
-                  <label for="rating">التقييم (1-5):</label>
-                  <div class="star-rating">
-                      <input type="hidden" name="rating" id="rating-value" required>
-                      <span class="star" data-value="1">★</span>
-                      <span class="star" data-value="2">★</span>
-                      <span class="star" data-value="3">★</span>
-                      <span class="star" data-value="4">★</span>
-                      <span class="star" data-value="5">★</span>
-                  </div>
-              </div>
-              <div class="col-md-6">
-                  <label for="comment">التعليق:</label>
-                  <textarea name="comment" class="form-control" rows="3" required></textarea>
-              </div>
-          </div>
-          <div class="text-center">
-              <button type="submit" class="btn btn-primary">إرسال التقييم</button>
-          </div>
-      </form>
-  {% else %}
-      <p><a href="{% url 'login' %}">سجّل الدخول</a> لتتمكن من ترك تقييم.</p>
-  {% endif %}
+   <!-- Add Review Form -->
+   <h4>أضف تقييمك:</h4>
+   {% if user.is_authenticated %}
+       <form method="post"  action="{% url 'rate_product' product.id %}" class="mt-4">
+           {% csrf_token %}
+           <div class="row mb-3">
+               <div class="col-md-6">
+                   <label for="rating">التقييم (1-5):</label>
+                   <div class="star-rating">
+                       <input type="hidden" name="rating" id="rating-value" required>
+                       <span class="star" data-value="1">★</span>
+                       <span class="star" data-value="2">★</span>
+                       <span class="star" data-value="3">★</span>
+                       <span class="star" data-value="4">★</span>
+                       <span class="star" data-value="5">★</span>
+                   </div>
+               </div>
+               <div class="col-md-6">
+                   <label for="comment">التعليق:</label>
+                   <textarea name="comment" class="form-control" rows="3" required></textarea>
+               </div>
+           </div>
+           <div class="text-center">
+               <button type="submit" class="btn btn-primary">إرسال التقييم</button>
+           </div>
+       </form>
+   {% else %}
+       <p><a href="{% url 'login' %}">سجّل الدخول</a> لتتمكن من ترك تقييم.</p>
+   {% endif %}
+ </div>
 </div>
+
 
 <style>
 .star-rating .star {
@@ -187,6 +193,58 @@ stars.forEach(star => {
         });
     });
 });
+
+function calculateDays() {
+    const checkin = new Date(document.getElementById('checkin-date').value);
+    const checkout = new Date(document.getElementById('checkout-date').value);
+    const pricePerDay = {{ product.sale_price|default:product.price }};
+
+    if (checkin && checkout && checkout > checkin) {
+        const days = (checkout - checkin) / (1000 * 60 * 60 * 24);
+        document.getElementById('qty-cart').value = days;
+        const totalPrice = days * pricePerDay;
+        document.getElementById('dynamic-price').textContent = `$${totalPrice.toFixed(2)}`;
+    }
+}
+
+// Add to Cart AJAX
+
 </script>
+
+<script>
+    // Check if button pressed
+    $(document).on('click', '#add-cart', function(e){
+        e.preventDefault();
+        $.ajax({
+            type: 'POST',
+            url: '{% url 'cart_add' %}',
+            data: {
+        product_id: $('#add-cart').val(),
+        product_qty: $('#qty-cart').val(),
+        csrfmiddlewaretoken: '{{ csrf_token }}',
+        action: 'post'
+            },
+    
+            success: function(json){
+                //console.log(json)
+                document.getElementById("cart_quantity").textContent = json.qty
+                location.reload();
+            },
+    
+            error: function(xhr, errmsg, err){
+    
+            }
+    
+    
+        });
+    
+    
+    
+    })
+    
+    
+    
+    
+    </script>
 
 {% endblock %}

@@ -8,8 +8,8 @@ from .forms import SignUpForm, UpdateUserForm, ChangePasswordForm, UserInfoForm
 from django.db.models import Max
 from payment.forms import ShippingForm
 from payment.models import ShippingAddress
-from .models import Product, Review
-from .forms import ReviewForm
+from .models import Product, Rating
+from .forms import RatingForm
 from django import forms
 from django.db.models import Q
 import json
@@ -163,9 +163,13 @@ def category(request, foo):
 		return redirect('home')
 
 
-def product(request,pk):
-	product = Product.objects.get(id=pk)
-	return render(request, 'product.html', {'product':product})
+def product(request, pk):
+    product = get_object_or_404(Product, id=pk)
+    ratings = Rating.objects.filter(product=product)
+    return render(request, 'product.html', {
+        'product': product,
+        'ratings': ratings
+    })
 
 
 def home(request):
@@ -311,26 +315,23 @@ def cart_add(request):
     # في حالة طلب GET، أرجع استجابة افتراضية
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
 @login_required
-def add_review(request, product_id):
-    product = get_object_or_404(Product, pk=product_id)
+def rate_product(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
     if request.method == 'POST':
-        form = ReviewForm(request.POST)
+        form = RatingForm(request.POST)
+        
         if form.is_valid():
-            review = form.save(commit=False)
-            review.product = product
-            review.user = request.user
-            review.save()
+            rating = form.save(commit=False)
+            rating.product = product  # ربط التقييم بالمنتج
+            rating.user = request.user  # ربط التقييم بالمستخدم
+            rating.save()
+            messages.success(request, 'تم إضافة تقييمك بنجاح!')
             return redirect('product', pk=product.id)
-    else:
-        form = ReviewForm()
-    
-    return render(request, 'product.html', {'form': form, 'product': product})
+        else:
+            messages.error(request, 'حدث خطأ أثناء إرسال التقييم.')
+            print(form.errors)  # طباعة الأخطاء في الطرفية للتحقق
 
-
-# views.py - تعديل عرض الصفحة الرئيسية
-from django.db.models import Avg
-
-def home(request):
-    products = Product.objects.annotate(avg_rating=Avg('reviews__rating')).order_by('-avg_rating')
-    return render(request, 'home.html', {'products': products})
+    return render(request, 'product.html', {'product': product, 'form': RatingForm()})

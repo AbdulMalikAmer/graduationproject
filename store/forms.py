@@ -4,8 +4,7 @@ from django import forms
 from .models import Profile
 from .models import Product
 from .models import Product,Category, City
-from .models import Review
-from .models import Product, Review
+
 
 class ProductForm(forms.ModelForm):
     name = forms.CharField(
@@ -127,11 +126,22 @@ class SignUpForm(UserCreationForm):
 
 
 
-class ReviewForm(forms.ModelForm):
+from .models import Rating
+
+class RatingForm(forms.ModelForm):
     class Meta:
-        model = Review
+        model = Rating
         fields = ['rating', 'comment']
         widgets = {
-            'rating': forms.Select(choices=[(i, i) for i in range(1, 6)], attrs={'class': 'form-control'}),
-            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'rating': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 5,
+                'placeholder': 'التقييم من 1 إلى 5'
+            }),
+            'comment': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'اكتب تعليقك هنا...'
+            })
         }

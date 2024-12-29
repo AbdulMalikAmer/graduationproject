@@ -69,30 +69,28 @@ class Customer(models.Model):
 
 # All of our Products
 class Product(models.Model):
-	name = models.CharField(max_length=100)
-	price = models.DecimalField(default=0, decimal_places=2, max_digits=6)
-	category = models.ForeignKey(Category, on_delete=models.CASCADE, default=1)
-	description = models.CharField(max_length=250, default='', blank=True, null=True)
-	image = models.ImageField(upload_to='uploads/product/')
-	# Add Sale Stuff
-	is_sale = models.BooleanField(default=False)
-	sale_price = models.DecimalField(default=0, decimal_places=2, max_digits=6)
-	user = models.ForeignKey(User, on_delete=models.CASCADE)  # المستخدم الذي أضاف الإعلان
-	city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)  # المدينة
-	phone_number = models.CharField(
-			max_length=10,
-			validators=[
-				RegexValidator(
-					regex=r'^(092|091|094|093)\d{7}$',
-					message="Phone number must start with 092, 091, 094, or 093 and be 10 digits long."
-				)
-			],
-			help_text="Enter a valid phone number starting with 092, 091, 094, or 093."
-		)
+    name = models.CharField(max_length=100)
+    price = models.DecimalField(default=0, decimal_places=2, max_digits=6)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, default=1)
+    description = models.CharField(max_length=250, default='', blank=True, null=True)
+    image = models.ImageField(upload_to='uploads/product/')
+    is_sale = models.BooleanField(default=False)
+    sale_price = models.DecimalField(default=0, decimal_places=2, max_digits=6)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # المستخدم الذي أضاف الإعلان
+    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)  # المدينة
+    phone_number = models.CharField(
+        max_length=10,
+        validators=[
+            RegexValidator(
+                regex=r'^(092|091|094|093)\d{7}$',
+                message="Phone number must start with 092, 091, 094, or 093 and be 10 digits long."
+            )
+        ],
+        help_text="Enter a valid phone number starting with 092, 091, 094, or 093."
+    )
 
-	def __str__(self):
-		return self.name
-
+    def __str__(self):
+        return self.name
 
 # Customer Orders
 class Order(models.Model):
@@ -121,15 +119,19 @@ class ChatMessage(models.Model):
    		 return f'{self.sender.username}: {self.message[:30]}...'
 
 
-class Review(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+class Rating(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='ratings')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    rating = models.PositiveIntegerField()
-    comment = models.TextField(blank=True)
+    rating = models.PositiveSmallIntegerField()  # تقييم من 1 إلى 5
+    comment = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ['product', 'user']
-    
     def __str__(self):
-        return f"{self.user.username} - {self.product.name} - {self.rating} Stars"
+        return f'{self.product.name} - {self.rating}★ by {self.user.username}'
+
+    class Meta:
+        unique_together = ('product', 'user')  # يمنع المستخدم من تقييم نفس المنتج مرتين
+
+    @property
+    def average_rating(self):
+        return self.product.ratings.aggregate(models.Avg('rating'))['rating__avg'] or 0

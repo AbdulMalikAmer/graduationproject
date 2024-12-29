@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 from .views import add_product, edit_product
+from .views import rate_product
+
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -19,6 +21,7 @@ urlpatterns = [
     path('product/<int:product_id>/edit/', edit_product, name='edit_product'),  # تعديل الإعلان
     path('chat/<int:product_id>/<int:receiver_id>/', views.chat, name='chat'),
     path('inbox/', views.inbox, name='inbox'),
+    path('product/<int:product_id>/rate/', rate_product, name='rate_product'),
     
 
 ]

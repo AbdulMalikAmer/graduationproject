@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 {% block content %}
-
 
 <div class="container">
   <br/>
@@ -30,15 +30,10 @@
                   </strike>
                   &nbsp;
                   ${{ product.sale_price }}
-  
-  
-  
           {% else %}
               ${{ product.price }}
-              
           {% endif %}
               <br/><br/>
-              <!--
               <div class="row justify-content-center">
                 <div class="col-md-2">تاريخ الوصول:</div>
                 <div class="col-md-4">
@@ -58,20 +53,22 @@
                     const checkinDate = document.getElementById('checkin-date').value;
                     const checkoutDate = document.getElementById('checkout-date');
             
-                    // إذا تم اختيار تاريخ الوصول
                     if (checkinDate) {
-                        // ضبط الحد الأدنى لتاريخ المغادرة
                         checkoutDate.min = checkinDate;
-            
-                        // إذا كان تاريخ المغادرة الحالي أقل من تاريخ الوصول، يتم مسحه
                         if (checkoutDate.value < checkinDate) {
                             checkoutDate.value = '';
                         }
                     }
                 }
             </script>
-            -->
               <br/><br/>
+              <label for="qty-cart">الكمية:</label>
+              <select id="qty-cart" class="form-select">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+              </select>
+              <br/>
               <button type="button" class="btn btn-secondary" onclick="this.textContent='{{ product.phone_number }}'; this.disabled=true;">
                 رقم الهاتف
             </button>
@@ -85,90 +82,98 @@
     <a href="{% url 'inbox' %}" class="btn btn-info">صندوق الرسائل</a>
             {% endif %}
 
-        
-          
-
             <button type="button" value="{{ product.id }}" class="btn btn-secondary" id="add-cart">
               إضافة إلى المفضلة
           </button>  
-  
-                    
       </center>
         </div>
       </div>
     </div>
   </div>
-  </div>
-    
+</div>
 
-<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-
-<!-- product.html -->
+<!-- Reviews Section -->
 <div class="container mt-5">
-  <h1>{{ product.name }}</h1>
-  <p>{{ product.description }}</p>
-  <h3>${{ product.price }}</h3>
-
-  <h4>Reviews:</h4>
-  {% for review in product.reviews.all %}
-      <div class="card mt-3">
-          <div class="card-body">
-              <strong>{{ review.user.username }}</strong> - {{ review.rating }} Stars
-              <p>{{ review.comment }}</p>
+  <h4>التقييمات:</h4>
+  {% if product.ratings.all %}
+      {% for rating in product.ratings.all %}
+          <div class="card mt-3">
+              <div class="card-body">
+                  <strong>{{ rating.user.username }}</strong> - 
+                  {% for i in "12345"|make_list %}
+                      {% if i|add:"0" <= rating.rating %}
+                          ★
+                      {% else %}
+                          ☆
+                      {% endif %}
+                  {% endfor %}
+                  <p>{{ rating.comment }}</p>
+              </div>
           </div>
-      </div>
-  {% empty %}
-      <p>No reviews yet. Be the first to review!</p>
-  {% endfor %}
+      {% endfor %}
+      <p><strong>متوسط التقييم:</strong> 
+        {% with avg=product.ratings.all|average_rating %}
+          {% if avg %}
+              {% for i in "12345"|make_list %}
+                  {% if i|add:"0" <= avg %}
+                      ★
+                  {% else %}
+                      ☆
+                  {% endif %}
+              {% endfor %}
+              ({{ avg|floatformat:1 }})
+          {% else %}
+              ☆☆☆☆☆ (0)
+          {% endif %}
+        {% endwith %}
+      </p>
+  {% else %}
+      <p>لا يوجد تقييمات بعد. كن أول من يقيّم!</p>
+  {% endif %}
 
-  <h4>Add Your Review:</h4>
+  <!-- Add Review Form -->
+  <h4>أضف تقييمك:</h4>
   {% if user.is_authenticated %}
-      <form method="post">
+      <form method="post"  action="{% url 'rate_product' product.id %}" class="mt-4" >
           {% csrf_token %}
-          {{ form.as_p }}
-          <button type="submit" class="btn btn-primary">Submit Review</button>
+          <div class="row mb-3">
+              <div class="col-md-6">
+                  <label for="rating">التقييم (1-5):</label>
+                  <input type="number" name="rating" class="form-control" min="1" max="5" required>
+              </div>
+              <div class="col-md-6">
+                  <label for="comment">التعليق:</label>
+                  <textarea name="comment" class="form-control" rows="3" required></textarea>
+              </div>
+          </div>
+          <div class="text-center">
+              <button type="submit" class="btn btn-primary">إرسال التقييم</button>
+          </div>
       </form>
   {% else %}
-      <p><a href="{% url 'login' %}">Login</a> to leave a review.</p>
+      <p><a href="{% url 'login' %}">سجّل الدخول</a> لتتمكن من ترك تقييم.</p>
   {% endif %}
 </div>
 
-
 <script>
-// Check if button pressed
 $(document).on('click', '#add-cart', function(e){
     e.preventDefault();
     $.ajax({
         type: 'POST',
         url: '{% url 'cart_add' %}',
         data: {
-    product_id: $('#add-cart').val(),
-    product_qty: $('#qty-cart option:selected').text(),
-    csrfmiddlewaretoken: '{{ csrf_token }}',
-    action: 'post'
+            product_id: $('#add-cart').val(),
+            product_qty: $('#qty-cart').val(),
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+            action: 'post'
         },
-
         success: function(json){
-            //console.log(json)
-            document.getElementById("cart_quantity").textContent = json.qty
+            document.getElementById("cart_quantity").textContent = json.qty;
             location.reload();
         },
-
-        error: function(xhr, errmsg, err){
-
-        }
-
-
+        error: function(xhr, errmsg, err){}
     });
-
-
-
-})
-
-
-
-
+});
 </script>
-
 
 {% endblock %}

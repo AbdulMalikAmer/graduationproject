@@ -20,64 +20,84 @@
           <div id="price-container">
             {% if product.is_sale %}
             <div class="d-flex justify-content-center small text-warning mb-2">
-                    <div class="bi-star-fill"></div>
-                    &nbsp;&nbsp;Sale!&nbsp;&nbsp;
-                    <div class="bi-star-fill"></div>
+              <div class="bi-star-fill"></div>
+              &nbsp;&nbsp;Sale!&nbsp;&nbsp;
+              <div class="bi-star-fill"></div>
             </div>
-    
-            <!-- Product price-->
-            <strike>
-            ${{ product.price }}
-            </strike>
+            
+            <strike id="original-price">${{ product.price }}</strike>
             &nbsp;
-            <span id="dynamic-price">${{ product.sale_price }}</span>
+            <span id="dynamic-price" data-daily-price="{{ product.sale_price }}">${{ product.sale_price }}</span>
             {% else %}
-            <span id="dynamic-price">${{ product.price }}</span>
+            <span id="dynamic-price" data-daily-price="{{ product.price }}">${{ product.price }}</span>
             {% endif %}
           </div>
-              
-              <br/><br/>
-              <form method="post" action="{% url 'reserve_product' product.id %}">
-                {% csrf_token %}
-                <div class="row justify-content-center">
-                    <div class="col-md-2">تاريخ الوصول:</div>
-                    <div class="col-md-4">
-                        <input type="date" class="form-control form-control-sm" id="checkin-date" name="checkin_date" required>
-                    </div>
-                </div>
-                <br/>
-                <div class="row justify-content-center">
-                    <div class="col-md-2">تاريخ المغادرة:</div>
-                    <div class="col-md-4">
-                        <input type="date" class="form-control form-control-sm" id="checkout-date" name="checkout_date" required>
-                    </div>
-                </div>
-                <br/>
-                <div class="text-center">
-                    <button type="submit" class="btn btn-primary">حجز المنتج</button>
-                </div>
-            </form>
-              <br/><br/>
-              <label for="qty-cart" id="days-label">عدد الأيام:</label>
-              <input type="number" id="qty-cart" class="form-control" value="1" min="1" readonly>
-              <br/>
-              <button type="button" class="btn btn-secondary" onclick="this.textContent='{{ product.phone_number }}'; this.disabled=true;">
-                رقم الهاتف
-            </button>
-            {% if request.user != product.user %}
-    <button type="button" class="btn btn-primary" 
-        onclick="location.href='{% url 'chat' product.id product.user.id %}'">
-        الدردشة مع المؤجر
-    </button>
-            {% else %}
-    <a href="{% url 'inbox' %}" class="btn btn-info">صندوق الرسائل</a>
-            {% endif %}
 
-            
-          </button>
-          <button type="button" value="{{ product.id }}" class="btn btn-secondary" id="add-cart">اضافه للمفضله/button>
-  
-      </center>
+          <br/><br/>
+          <form method="post" action="{% url 'reserve_product' product.id %}">
+            {% csrf_token %}
+            <div class="row justify-content-center">
+              <div class="col-md-2">تاريخ الوصول:</div>
+              <div class="col-md-4">
+                <input type="date" class="form-control form-control-sm" 
+                       id="checkin-date" name="checkin_date" 
+                       onchange="calculatePrice()" required>
+              </div>
+            </div>
+            <br/>
+            <div class="row justify-content-center">
+              <div class="col-md-2">تاريخ المغادرة:</div>
+              <div class="col-md-4">
+                <input type="date" class="form-control form-control-sm" 
+                       id="checkout-date" name="checkout_date" 
+                       onchange="calculatePrice()" required>
+              </div>
+            </div>
+            <br/>
+
+            <div class="row justify-content-center">
+              <div class="col-md-3 text-center">
+                <label>عدد الأيام:</label>
+                <input type="number" class="form-control text-center" 
+                       id="qty-cart" value="1" min="1" readonly>
+              </div>
+              <div class="col-md-3 text-center">
+                <label>السعر الإجمالي:</label>
+                <div class="h4" id="total-price"></div>
+              </div>
+            </div>
+
+            <!-- Buttons Group -->
+            <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check2-circle me-2"></i>حجز المنتج
+              </button>
+
+             
+
+              {% if request.user != product.user %}
+              <button type="button" class="btn btn-success" 
+                      onclick="location.href='{% url 'chat' product.id product.user.id %}'">
+                <i class="bi bi-chat-dots me-2"></i>الدردشة
+              </button>
+              {% else %}
+              <a href="{% url 'inbox' %}" class="btn btn-warning">
+                <i class="bi bi-inbox me-2"></i>الرسائل
+              </a>
+              {% endif %}
+
+              <button type="button" value="{{ product.id }}" 
+                      class="btn btn-danger" id="add-cart">
+                <i class="bi bi-heart me-2"></i>المفضلة
+              </button>
+              <button type="button" class="btn btn-secondary" 
+              onclick="this.textContent='{{ product.phone_number }}'; this.disabled=true;">
+        <i class="bi bi-telephone me-2"></i>رقم الهاتف
+      </button>
+            </div>
+          </form>
+
+          </center>
         </div>
       </div>
     </div>
@@ -88,182 +108,203 @@
 <div class="container mt-5">
   <h4>التقييمات:</h4>
   {% if product.ratings.all %}
-      {% for rating in product.ratings.all %}
-          <div class="card mt-3">
-              <div class="card-body">
-                  <strong>{{ rating.user.username }}</strong> - 
-                  {% for i in "12345"|make_list %}
-                      {% if i|add:"0" <= rating.rating %}
-                          ★
-                      {% else %}
-                          ☆
-                      {% endif %}
-                  {% endfor %}
-                  <p>{{ rating.comment }}</p>
-              </div>
-          </div>
-      {% endfor %}
-      <p><strong>متوسط التقييم:</strong> 
-        {% with avg=product.ratings.all|average_rating %}
-          {% if avg %}
-              {% for i in "12345"|make_list %}
-                  {% if i|add:"0" <= avg %}
-                      ★
-                  {% else %}
-                      ☆
-                  {% endif %}
-              {% endfor %}
-              ({{ avg|floatformat:1 }})
-          {% else %}
-              ☆☆☆☆☆ (0)
-          {% endif %}
-        {% endwith %}
-      </p>
+    {% for rating in product.ratings.all %}
+      <div class="card mt-3">
+        <div class="card-body">
+          <strong>{{ rating.user.username }}</strong> - 
+          {% for i in "12345"|make_list %}
+            {% if i|add:"0" <= rating.rating %}
+              ★
+            {% else %}
+              ☆
+            {% endif %}
+          {% endfor %}
+          <p>{{ rating.comment }}</p>
+        </div>
+      </div>
+    {% endfor %}
+    <p><strong>متوسط التقييم:</strong> 
+      {% with avg=product.ratings.all|average_rating %}
+        {% if avg %}
+          {% for i in "12345"|make_list %}
+            {% if i|add:"0" <= avg %}
+              ★
+            {% else %}
+              ☆
+            {% endif %}
+          {% endfor %}
+          ({{ avg|floatformat:1 }})
+        {% else %}
+          ☆☆☆☆☆ (0)
+        {% endif %}
+      {% endwith %}
+    </p>
   {% else %}
-      <p>لا يوجد تقييمات بعد. كن أول من يقيّم!</p>
+    <p>لا يوجد تقييمات بعد. كن أول من يقيّم!</p>
   {% endif %}
-   <!-- Add Review Form -->
-   <h4>أضف تقييمك:</h4>
-   {% if user.is_authenticated %}
-       <form method="post"  action="{% url 'rate_product' product.id %}" class="mt-4">
-           {% csrf_token %}
-           <div class="row mb-3">
-               <div class="col-md-6">
-                   <label for="rating">التقييم (1-5):</label>
-                   <div class="star-rating">
-                       <input type="hidden" name="rating" id="rating-value" required>
-                       <span class="star" data-value="1">★</span>
-                       <span class="star" data-value="2">★</span>
-                       <span class="star" data-value="3">★</span>
-                       <span class="star" data-value="4">★</span>
-                       <span class="star" data-value="5">★</span>
-                   </div>
-               </div>
-               <div class="col-md-6">
-                   <label for="comment">التعليق:</label>
-                   <textarea name="comment" class="form-control" rows="3" required></textarea>
-               </div>
-           </div>
-           <div class="text-center">
-               <button type="submit" class="btn btn-primary">إرسال التقييم</button>
-           </div>
-       </form>
-   {% else %}
-       <p><a href="{% url 'login' %}">سجّل الدخول</a> لتتمكن من ترك تقييم.</p>
-   {% endif %}
- </div>
-</div>
 
+  <!-- Add Review Form -->
+  <h4>أضف تقييمك:</h4>
+  {% if user.is_authenticated %}
+    <form method="post" action="{% url 'rate_product' product.id %}" class="mt-4">
+      {% csrf_token %}
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="rating">التقييم (1-5):</label>
+          <div class="star-rating">
+            <input type="hidden" name="rating" id="rating-value" required>
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+            <span class="star" data-value="4">★</span>
+            <span class="star" data-value="5">★</span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label for="comment">التعليق:</label>
+          <textarea name="comment" class="form-control" rows="3" required></textarea>
+        </div>
+      </div>
+      <div class="text-center">
+        <button type="submit" class="btn btn-primary">إرسال التقييم</button>
+      </div>
+    </form>
+  {% else %}
+    <p><a href="{% url 'login' %}">سجّل الدخول</a> لتتمكن من ترك تقييم.</p>
+  {% endif %}
+</div>
 
 <style>
 .star-rating .star {
-    font-size: 30px;
-    cursor: pointer;
-    color: #ddd;
-    display: inline-block;
-    transition: color 0.3s ease-in-out;
+  font-size: 30px;
+  cursor: pointer;
+  color: #ddd;
+  display: inline-block;
+  transition: color 0.3s ease-in-out;
 }
 
 .star-rating .star.selected,
 .star-rating .star.hover,
 .star-rating .star:hover ~ .star {
-    color: #f5c518;
+  color: #f5c518;
 }
 
-.star-rating .star:hover {
-    transition: color 0.6s ease-in-out;
+#add-cart:hover i {
+  transform: scale(1.2);
+  transition: all 0.3s ease;
+}
+
+#total-price {
+  color: #28a745;
+  font-weight: bold;
 }
 </style>
 
 <script>
+// تقييم النجوم
 const stars = document.querySelectorAll('.star');
 const ratingValue = document.getElementById('rating-value');
 
 stars.forEach(star => {
-    star.addEventListener('mouseover', function() {
-        const value = this.getAttribute('data-value');
-        stars.forEach(s => {
-            s.classList.remove('hover');
-            if (s.getAttribute('data-value') <= value) {
-                s.classList.add('hover');
-            }
-        });
+  star.addEventListener('mouseover', function() {
+    const value = this.getAttribute('data-value');
+    stars.forEach(s => {
+      s.classList.remove('hover');
+      if (s.getAttribute('data-value') <= value) {
+        s.classList.add('hover');
+      }
     });
-    star.addEventListener('click', function() {
-        const value = this.getAttribute('data-value');
-        ratingValue.value = value;
-        stars.forEach(s => {
-            s.classList.remove('selected');
-            if (s.getAttribute('data-value')  <= value) {
-                s.classList.add('selected');
-            }
-        });
+  });
+  
+  star.addEventListener('click', function() {
+    const value = this.getAttribute('data-value');
+    ratingValue.value = value;
+    stars.forEach(s => {
+      s.classList.remove('selected');
+      if (s.getAttribute('data-value') <= value) {
+        s.classList.add('selected');
+      }
     });
+  });
 });
 
-function calculateDays() {
-    const checkin = new Date(document.getElementById('checkin-date').value);
-    const checkout = new Date(document.getElementById('checkout-date').value);
-    const pricePerDay = {{ product.sale_price|default:product.price }};
+// حساب السعر والأيام
+function calculatePrice() {
+  const checkin = document.getElementById('checkin-date').value;
+  const checkout = document.getElementById('checkout-date').value;
+  const pricePerDay = parseFloat(document.getElementById('dynamic-price').dataset.dailyPrice);
 
-    if (checkin && checkout && checkout > checkin) {
-        const days = (checkout - checkin) / (1000 * 60 * 60 * 24);
-        document.getElementById('qty-cart').value = days;
-        const totalPrice = days * pricePerDay;
-        document.getElementById('dynamic-price').textContent = `$${totalPrice.toFixed(2)}`;
+  if (checkin && checkout) {
+    const start = new Date(checkin);
+    const end = new Date(checkout);
+    const diffTime = end - start;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 0) {
+      document.getElementById('qty-cart').value = diffDays;
+      document.getElementById('total-price').textContent = '$' + (pricePerDay * diffDays).toFixed(2);
+    } else {
+      alert('تاريخ المغادرة يجب أن يكون بعد تاريخ الوصول!');
+      document.getElementById('checkout-date').value = '';
     }
+  }
 }
 
-// Add to Cart AJAX
+// إضافة للمفضلة
+$(document).on('click', '#add-cart', function(e){
+  e.preventDefault();
+  const btn = $(this);
+  btn.prop('disabled', true);
+  
+  $.ajax({
+    type: 'POST',
+    url: '{% url 'cart_add' %}',
+    data: {
+      product_id: btn.val(),
+      product_qty: $('#qty-cart').val(),
+      csrfmiddlewaretoken: '{{ csrf_token }}',
+      action: 'post'
+    },
+    success: function(json){
+      btn.find('i').toggleClass('bi-heart bi-heart-fill');
+      document.getElementById("cart_quantity").textContent = json.qty;
+      btn.prop('disabled', false);
+    },
+    error: function(xhr, errmsg, err){
+      btn.prop('disabled', false);
+      console.error('Error:', errmsg);
+    }
+  });
+});
 
-</script>
+// التحقق من التواريخ المحجوزة
+document.getElementById('checkout-date').addEventListener('change', function () {
+  const checkin = document.getElementById('checkin-date').value;
+  const checkout = this.value;
+  const productId = {{ product.id }};
 
-<script>
-    // Check if button pressed
-    $(document).on('click', '#add-cart', function(e){
-        e.preventDefault();
-        $.ajax({
-            type: 'POST',
-            url: '{% url 'cart_add' %}',
-            data: {
-                product_id: $('#add-cart').val(),
-                product_qty: $('#qty-cart').val(),
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-                action: 'post'
-            },
-            success: function(json){
-                document.getElementById("cart_quantity").textContent = json.qty
-                location.reload();
-            },
-            error: function(xhr, errmsg, err){
-            }
-        });
+  if (checkin && checkout) {
+    fetch(`/reserve/${productId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+      },
+      body: JSON.stringify({ 
+        checkin_date: checkin, 
+        checkout_date: checkout 
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        alert(data.error);
+        document.getElementById('checkout-date').value = '';
+        calculatePrice();
+      }
     });
-
-    // تحقق من التواريخ المحجوزة
-    document.getElementById('checkout-date').addEventListener('change', function () {
-        const checkin = document.getElementById('checkin-date').value;
-        const checkout = this.value;
-        const productId = {{ product.id }};
-
-        if (checkin && checkout) {
-            fetch(`/reserve/${productId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}',
-                },
-                body: JSON.stringify({ checkin_date: checkin, checkout_date: checkout }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                }
-            });
-        }
-    });
+  }
+});
 </script>
-
 
 {% endblock %}

@@ -3,26 +3,26 @@
 
 {% block content %}
 
-        <!-- Header-->
-        <header class="bg-dark py-5">
-            <div class="container px-4 px-lg-5 my-5">
-                <div class="text-center text-white">
-                    <h1 class="display-4 fw-bolder">صفحة المفضلة</h1>
-                    <p class="lead fw-normal text-white-50 mb-0">تصفح التفضيلات التي اخترتها</p>
-                </div>
-            </div>
-        </header>
-        <br/>
-        <div class="container">
-        {% if cart_products %}
-        	{% for product in cart_products %}
-        	
+<!-- Header-->
+<header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">صفحة المفضلة</h1>
+            <p class="lead fw-normal text-white-50 mb-0">تصفح التفضيلات التي اخترتها</p>
+        </div>
+    </div>
+</header>
+<br/>
+<div class="container">
+{% if cart_products %}
+    {% for product in cart_products %}
+    
 <div class="card mb-3">
-  <div class="row g-0">
+    <div class="row g-0">
     <div class="col-md-4">
-      <img src="{{ product.image.url }}" class="img-fluid rounded-start" alt="...">
-      <!-- Ratings -->
-      <div class="mt-3 text-center">
+        <img src="{{ product.image.url }}" class="img-fluid rounded-start" alt="...">
+        <!-- Ratings -->
+        <div class="mt-3 text-center">
         {% with avg=product.ratings.all|average_rating %}
             <p>التقييم: 
                 {% if avg %}
@@ -39,79 +39,97 @@
                 {% endif %}
             </p>
         {% endwith %}
-      </div>
+        </div>
     </div>
     <div class="col-md-8">
-      <div class="card-body">
+        <div class="card-body">
         <center>
-        <h5 class="card-title">{{ product.name }}</h5>
-        <br/>
-        <p class="card-text justified">{{ product.description }}</p>
-        
-        {% if product.is_sale %}
-        <div class="d-flex justify-content-center small text-warning mb-2">
+            <h5 class="card-title">{{ product.name }}</h5>
+            <br/>
+            <p class="card-text justified">{{ product.description }}</p>
+            
+            {% if product.is_sale %}
+            <div class="d-flex justify-content-center small text-warning mb-2">
                 <div class="bi-star-fill"></div>
                 &nbsp;&nbsp;Sale!&nbsp;&nbsp;
                 <div class="bi-star-fill"></div>
-                </div>
+            </div>
 
-                <!-- Product price-->
-                <strike>
+            <!-- Product price-->
+            <strike>
                 $<span id="original-price-{{product.id}}" data-original-price="{{ product.price }}">{{ product.price }}</span>
-                </strike>
-                &nbsp;
-                $<span id="sale-price-{{product.id}}" data-sale-price="{{ product.sale_price }}">{{ product.sale_price }}</span>
-        {% else %}
-            $<span id="original-price-{{product.id}}" data-original-price="{{ product.price }}">{{ product.price }}</span>
-        {% endif %}
-        
-        <div class="row justify-content-center">
-            <div class="col-md-2">الأيام:</div>
-            <div class="col-md-2">
-                <input type="number" class="form-control form-control-sm" id="select{{product.id}}" min="1" value="1" readonly>
-            </div>
-        </div>
-        
-        <div class="row justify-content-center mt-3">
-            <div class="col-md-2">تاريخ الوصول:</div>
-            <div class="col-md-4">
-                <input type="date" class="form-control form-control-sm" id="checkin-{{product.id}}" onchange="calculateDays('{{product.id}}')">
-            </div>
-        </div>
-        <br/>
-        <div class="row justify-content-center">
-            <div class="col-md-2">تاريخ المغادرة:</div>
-            <div class="col-md-4">
-                <input type="date" class="form-control form-control-sm" id="checkout-{{product.id}}" onchange="calculateDays('{{product.id}}')">
-            </div>
-        </div>
-        <br/><br/>
-        <button type="button" class="btn btn-secondary" onclick="this.textContent='{{ product.phone_number }}'; this.disabled=true;">
-            احجز الآن
-        </button>
-        <button type="button" data-index="{{product.id}}" class="btn btn-danger delete-product">ازاله من المفضله</button>
-        <button type="button" class="btn btn-primary" onclick="location.href='{% url 'chat' product.id product.user.id %}'">
-            دردشة
-        </button>
-        <button type="button" class="btn btn-success" onclick="confirmBooking('{{product.id}}')">
-            تأكيد الحجز
-        </button>
-    </center>
-      </div>
-    </div>
-  </div>
-</div>
-        	{% endfor %}
-            <div align="right">
-            <h3>Total: ${{ totals }}</h3>
-            </div>
-            <br/><br/><br/>
-        	{% else %}
-        	There's Nothing In Your Cart...
-        	<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-        {% endif %}
-    	</div>
+            </strike>
+            &nbsp;
+            $<span id="sale-price-{{product.id}}" data-sale-price="{{ product.sale_price }}">{{ product.sale_price }}</span>
+            {% else %}
+                $<span id="original-price-{{product.id}}" data-original-price="{{ product.price }}">{{ product.price }}</span>
+            {% endif %}
+            
+            <form method="post" action="{% url 'reserve_product' product.id %}">
+                {% csrf_token %}
+                <div class="row justify-content-center mt-3">
+                    <div class="col-md-2">تاريخ الوصول:</div>
+                    <div class="col-md-4">
+                        <input type="date" class="form-control form-control-sm" 
+                               id="checkin-{{product.id}}" name="checkin_date" 
+                               onchange="calculateDays('{{product.id}}')" required>
+                    </div>
+                </div>
+                <br/>
+                <div class="row justify-content-center">
+                    <div class="col-md-2">تاريخ المغادرة:</div>
+                    <div class="col-md-4">
+                        <input type="date" class="form-control form-control-sm" 
+                               id="checkout-{{product.id}}" name="checkout_date" 
+                               onchange="calculateDays('{{product.id}}')" required>
+                    </div>
+                </div>
+                <br/>
+                <div class="row justify-content-center">
+                    <div class="col-md-2">الأيام:</div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control form-control-sm" 
+                               id="select{{product.id}}" min="1" value="1" readonly>
+                    </div>
+                </div>
+                
+                <!-- Buttons Section -->
+                <div class="mt-4 d-flex justify-content-center gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2-square me-2"></i>حجز المنتج
+                    </button>
+                    
+                    <button type="button" class="btn btn-success" 
+                            onclick="location.href='{% url 'chat' product.id product.user.id %}'">
+                        <i class="bi bi-chat-dots me-2"></i>دردشة
+                    </button>
+                    
+                    <button type="button" data-index="{{product.id}}" class="btn btn-danger delete-product">
+                        <i class="bi bi-trash3 me-2"></i>ازاله من المفضله
+                    </button>
+                    
+                    <button type="button" class="btn btn-secondary" 
+                            onclick="this.innerHTML='<i class=\'bi bi-telephone me-2\'></i>{{ product.phone_number }}'; this.disabled=true;">
+                        <i class="bi bi-telephone me-2"></i>رقم الهاتف
+                    </button>
+                </div>
+            </form>
 
+        </center>
+        </div>
+    </div>
+    </div>
+</div>
+    {% endfor %}
+    <div align="right">
+    <h3>Total: ${{ totals }}</h3>
+    </div>
+    <br/><br/><br/>
+    {% else %}
+    There's Nothing In Your Cart...
+    <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+{% endif %}
+</div>
 <script>
 function calculateDays(productId) {
     const checkin = document.getElementById('checkin-' + productId).value;
@@ -119,7 +137,7 @@ function calculateDays(productId) {
     const quantity = document.getElementById('select' + productId);
     const originalPriceElement = document.getElementById('original-price-' + productId);
     const salePriceElement = document.getElementById('sale-price-' + productId);
-    const originalPrice = parseFloat(originalPriceElement.getAttribute('data-original-price'));
+    const originalPrice = parseFloat(originalPriceElement?.getAttribute('data-original-price') || 0);
     const salePrice = salePriceElement ? parseFloat(salePriceElement.getAttribute('data-sale-price')) : originalPrice;
 
     if (checkin && checkout) {
@@ -142,45 +160,25 @@ function calculateDays(productId) {
     }
 }
 
-function confirmBooking(productId) {
-    alert('تم تأكيد الحجز للمنتج ' + productId);
-}
-
-
 // Delete Item From Cart
 $(document).on('click', '.delete-product', function(e){
     e.preventDefault();
-    // grab the product id
-    //var productid = $(this).data('index');
-
     $.ajax({
-    type: 'POST',
-    url: '{% url 'cart_delete' %}',
-    data: {
-      product_id: $(this).data('index'),
-      csrfmiddlewaretoken: '{{ csrf_token }}',
-      action: 'post'
-    },
-    success: function(json){
-        //console.log(json)
-        //document.getElementById("cart_quantity").textContent = json.qty
-        location.reload();
-    },
-
-    error: function(xhr, errmsg, err){
-
-    }
-
-
+        type: 'POST',
+        url: '{% url 'cart_delete' %}',
+        data: {
+            product_id: $(this).data('index'),
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+            action: 'post'
+        },
+        success: function(json){
+            location.reload();
+        },
+        error: function(xhr, errmsg, err){
+            console.error("Error:", errmsg);
+        }
     });
-
-})
-
-
-
-
-
-
+});
 </script>
 
 {% endblock %}

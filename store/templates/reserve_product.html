@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>حجز المنتج: {{ product.name }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">تأكيد الحجز</button>
+    </form>
+
+    <!-- قسم الحجوزات -->
+    <div class="container mt-5">
+        <h2>حجوزاتي</h2>
+        {% if user_reservations %}
+            <ul class="list-group">
+                {% for reservation in user_reservations %}
+                <li class="list-group-item">
+                    <strong>{{ reservation.product.name }}</strong>
+                    <br>
+                    تاريخ الوصول: {{ reservation.checkin_date }}
+                    <br>
+                    تاريخ المغادرة: {{ reservation.checkout_date }}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>لا توجد حجوزات بعد.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

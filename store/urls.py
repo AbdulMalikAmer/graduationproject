@@ -22,6 +22,8 @@ urlpatterns = [
     path('chat/<int:product_id>/<int:receiver_id>/', views.chat, name='chat'),
     path('inbox/', views.inbox, name='inbox'),
     path('product/<int:product_id>/rate/', rate_product, name='rate_product'),
+    path('reserve/<int:product_id>/', views.reserve_product, name='reserve_product'),
+    path('reservations/', views.user_reservations, name='user_reservations'),
     
 
 ]

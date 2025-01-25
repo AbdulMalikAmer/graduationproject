@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+
+<!-- Header -->
+<header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">حجوزاتي</h1>
+            <p class="lead fw-normal text-white-50 mb-0">تصفح الحجوزات التي قمت بها</p>
+        </div>
+    </div>
+</header>
+<br/>
+<div class="container">
+    {% if reservations %}
+        {% for reservation in reservations %}
+        
+        <div class="card mb-3">
+            <div class="row g-0">
+                <div class="col-md-4">
+                    <img src="{{ reservation.product.image.url }}" class="img-fluid rounded-start" alt="...">
+                    <!-- Ratings -->
+                    <div class="mt-3 text-center">
+                        {% with avg=reservation.product.ratings.all|average_rating %}
+                            <p>التقييم: 
+                                {% if avg %}
+                                    {% for i in "12345"|make_list %}
+                                        {% if i|add:"0" <= avg %}
+                                            ★
+                                        {% else %}
+                                            ☆
+                                        {% endif %}
+                                    {% endfor %}
+                                    ({{ avg|floatformat:1 }})
+                                {% else %}
+                                    ☆☆☆☆☆ (0)
+                                {% endif %}
+                            </p>
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <center>
+                            <h5 class="card-title">{{ reservation.product.name }}</h5>
+                            <br/>
+                            <p class="card-text justified">{{ reservation.product.description }}</p>
+
+                            <!-- Price Section -->
+                            {% if reservation.product.is_sale %}
+                                <div class="d-flex justify-content-center small text-warning mb-2">
+                                    <div class="bi-star-fill"></div>
+                                    &nbsp;&nbsp;Sale!&nbsp;&nbsp;
+                                    <div class="bi-star-fill"></div>
+                                </div>
+                                <strike>$<span>{{ reservation.product.price }}</span></strike>
+                                &nbsp;
+                                $<span>{{ reservation.product.sale_price }}</span>
+                            {% else %}
+                                $<span>{{ reservation.product.price }}</span>
+                            {% endif %}
+
+                            <!-- Booking Dates -->
+                            <div class="row justify-content-center mt-3">
+                                <div class="col-md-4">تاريخ الوصول:</div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" value="{{ reservation.checkin_date }}" readonly>
+                                </div>
+                            </div>
+                            <br/>
+                            <div class="row justify-content-center">
+                                <div class="col-md-4">تاريخ المغادرة:</div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" value="{{ reservation.checkout_date }}" readonly>
+                                </div>
+                            </div>
+                            <br/>
+                        </center>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center text-muted">لا توجد حجوزات بعد...</p>
+    {% endif %}
+</div>
+
+{% endblock %}

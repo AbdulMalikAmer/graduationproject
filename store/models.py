@@ -135,3 +135,17 @@ class Rating(models.Model):
     @property
     def average_rating(self):
         return self.product.ratings.aggregate(models.Avg('rating'))['rating__avg'] or 0
+	
+#مودل للحجوزات
+class Reservation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # المستخدم الذي يحجز المنتج
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)  # المنتج المحجوز
+    checkin_date = models.DateField()  # تاريخ الوصول
+    checkout_date = models.DateField()  # تاريخ المغادرة
+    created_at = models.DateTimeField(auto_now_add=True)  # تاريخ إنشاء الحجز
+
+    class Meta:
+        unique_together = ('product', 'checkin_date', 'checkout_date')  # منع التداخل في نفس التواريخ
+
+    def __str__(self):
+        return f"{self.user.username} reserved {self.product.name} from {self.checkin_date} to {self.checkout_date}"

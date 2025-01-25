@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPassw
 from django import forms
 from .models import Profile
 from .models import Product
-from .models import Product,Category, City
+from .models import Product,Category, City,Reservation
 
 
 class ProductForm(forms.ModelForm):
@@ -145,3 +145,30 @@ class RatingForm(forms.ModelForm):
                 'placeholder': 'اكتب تعليقك هنا...'
             })
         }
+
+
+class ReservationForm(forms.ModelForm):
+    class Meta:
+        model = Reservation
+        fields = ['checkin_date', 'checkout_date']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        checkin_date = cleaned_data.get('checkin_date')
+        checkout_date = cleaned_data.get('checkout_date')
+        product = self.instance.product  # المنتج المرتبط بالحجز
+
+        # التحقق من أن التواريخ صالحة
+        if checkin_date and checkout_date:
+            if checkin_date >= checkout_date:
+                raise forms.ValidationError("تاريخ المغادرة يجب أن يكون بعد تاريخ الوصول.")
+
+            # التحقق من وجود تداخل مع حجوزات أخرى
+            overlapping_reservations = Reservation.objects.filter(
+                product=product,
+                checkin_date__lt=checkout_date,
+                checkout_date__gt=checkin_date
+            )
+            if overlapping_reservations.exists():
+                raise forms.ValidationError("المنتج محجوز في هذه التواريخ.")
+        return cleaned_data

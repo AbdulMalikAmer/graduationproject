@@ -8,7 +8,7 @@ from .forms import SignUpForm, UpdateUserForm, ChangePasswordForm, UserInfoForm
 from django.db.models import Max
 from payment.forms import ShippingForm
 from payment.models import ShippingAddress
-from .models import Product, Rating
+from .models import Product, Rating, Reservation
 from .forms import RatingForm
 from django import forms
 from django.db.models import Q
@@ -337,3 +337,59 @@ def rate_product(request, product_id):
             print(form.errors)  # طباعة الأخطاء في الطرفية للتحقق
 
     return render(request, 'product.html', {'product': product, 'form': RatingForm()})
+
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
+from .forms import ReservationForm  # استيراد الفورم
+from datetime import datetime
+
+def reserve_product(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    # جلب جميع الحجوزات الخاصة بالمستخدم
+    user_reservations = Reservation.objects.filter(user=request.user)
+
+    if request.method == "POST":
+        checkin_date = request.POST.get('checkin_date')
+        checkout_date = request.POST.get('checkout_date')
+
+        # تحويل التواريخ إلى كائنات
+        checkin_date = datetime.strptime(checkin_date, '%Y-%m-%d').date()
+        checkout_date = datetime.strptime(checkout_date, '%Y-%m-%d').date()
+
+        # التحقق من وجود حجز متداخل
+        overlapping_reservations = Reservation.objects.filter(
+            product=product,
+            checkin_date__lt=checkout_date,
+            checkout_date__gt=checkin_date
+        )
+
+        if overlapping_reservations.exists():
+            return JsonResponse({'error': 'هذا المنتج محجوز في هذه التواريخ.'}, status=400)
+
+        # إنشاء الحجز
+        try:
+            reservation = Reservation(
+                user=request.user,
+                product=product,  # تعيين المنتج بشكل صريح
+                checkin_date=checkin_date,
+                checkout_date=checkout_date
+            )
+            reservation.save()
+        except Exception as e:
+            return JsonResponse({'error': f'حدث خطأ: {str(e)}'}, status=500)
+
+        return JsonResponse({'success': 'تم الحجز بنجاح.'})
+
+    # عرض صفحة الحجز مع الحجوزات
+    return render(request, 'reserve_product.html', {
+        'product': product,
+        'user_reservations': user_reservations  # إرسال الحجوزات إلى القالب
+    })
+
+
+def user_reservations(request):
+    reservations = Reservation.objects.filter(user=request.user)
+    return render(request, 'user_reservations.html', {'reservations': reservations})

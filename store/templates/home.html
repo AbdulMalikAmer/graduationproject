@@ -33,9 +33,9 @@
                             <h5 class="fw-bolder">{{ product.name }}</h5>
                             <!-- Product price-->
                             {% if product.is_sale %}
-                            <strike>${{ product.price }}</strike> ${{ product.sale_price }}
+                            <strike>LYD{{ product.price }}</strike> LYD{{ product.sale_price }}
                             {% else %}
-                            ${{ product.price }}
+                            LYD{{ product.price }}
                             {% endif %}
                             <!-- City -->
                             {% if product.city %}

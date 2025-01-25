@@ -24,6 +24,7 @@ urlpatterns = [
     path('product/<int:product_id>/rate/', rate_product, name='rate_product'),
     path('reserve/<int:product_id>/', views.reserve_product, name='reserve_product'),
     path('reservations/', views.user_reservations, name='user_reservations'),
+    path('delete-reservation/<int:reservation_id>/', views.delete_reservation, name='delete_reservation'),
     
 
 ]

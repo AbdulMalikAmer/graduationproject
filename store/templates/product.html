@@ -25,11 +25,11 @@
               <div class="bi-star-fill"></div>
             </div>
             
-            <strike id="original-price">${{ product.price }}</strike>
+            <strike id="original-price">LYD{{ product.price }}</strike>
             &nbsp;
-            <span id="dynamic-price" data-daily-price="{{ product.sale_price }}">${{ product.sale_price }}</span>
+            <span id="dynamic-price" data-daily-price="{{ product.sale_price }}">LYD{{ product.sale_price }}</span>
             {% else %}
-            <span id="dynamic-price" data-daily-price="{{ product.price }}">${{ product.price }}</span>
+            <span id="dynamic-price" data-daily-price="{{ product.price }}">LYD{{ product.price }}</span>
             {% endif %}
           </div>
 

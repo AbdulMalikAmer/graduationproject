@@ -88,6 +88,7 @@ class Product(models.Model):
         ],
         help_text="Enter a valid phone number starting with 092, 091, 094, or 093."
     )
+    
 
     def __str__(self):
         return self.name
@@ -137,15 +138,23 @@ class Rating(models.Model):
         return self.product.ratings.aggregate(models.Avg('rating'))['rating__avg'] or 0
 	
 #مودل للحجوزات
+from django.utils import timezone
+
 class Reservation(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # المستخدم الذي يحجز المنتج
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)  # المنتج المحجوز
-    checkin_date = models.DateField()  # تاريخ الوصول
-    checkout_date = models.DateField()  # تاريخ المغادرة
-    created_at = models.DateTimeField(auto_now_add=True)  # تاريخ إنشاء الحجز
-
-    class Meta:
-        unique_together = ('product', 'checkin_date', 'checkout_date')  # منع التداخل في نفس التواريخ
-
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    checkin_date = models.DateField()
+    checkout_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def can_delete(self, user):
+        """
+        تحقق إذا كان المستخدم يمكنه حذف الحجز
+        الشروط:
+        1. المستخدم هو صاحب الحجز
+        2. لم يمر تاريخ الوصول بعد
+        """
+        return self.user == user and self.checkin_date > timezone.now().date()
+    
     def __str__(self):
-        return f"{self.user.username} reserved {self.product.name} from {self.checkin_date} to {self.checkout_date}"
+        return f"{self.user.username} - {self.product.name}"

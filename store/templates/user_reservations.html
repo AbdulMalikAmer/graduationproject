@@ -55,11 +55,11 @@
                                     &nbsp;&nbsp;Sale!&nbsp;&nbsp;
                                     <div class="bi-star-fill"></div>
                                 </div>
-                                <strike>$<span>{{ reservation.product.price }}</span></strike>
+                                <strike>LYD<span>{{ reservation.product.price }}</span></strike>
                                 &nbsp;
-                                $<span>{{ reservation.product.sale_price }}</span>
+                                LYD<span>{{ reservation.product.sale_price }}</span>
                             {% else %}
-                                $<span>{{ reservation.product.price }}</span>
+                                LYD<span>{{ reservation.product.price }}</span>
                             {% endif %}
 
                             <!-- Booking Dates -->
@@ -77,6 +77,14 @@
                                 </div>
                             </div>
                             <br/>
+                            <div class="mt-4">
+                                <form method="POST" action="{% url 'delete_reservation' reservation.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('هل أنت متأكد من رغبتك في حذف هذا الحجز؟')">
+                                        <i class="bi bi-trash"></i> حذف الحجز
+                                    </button>
+                                </form>
+                            </div>
                         </center>
                     </div>
                 </div>

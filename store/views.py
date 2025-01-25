@@ -346,6 +346,8 @@ from .forms import ReservationForm  # استيراد الفورم
 from datetime import datetime
 
 def reserve_product(request, product_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'يجب تسجيل الدخول لإتمام الحجز'}, status=403)
     product = get_object_or_404(Product, id=product_id)
 
     # جلب جميع الحجوزات الخاصة بالمستخدم
@@ -390,6 +392,24 @@ def reserve_product(request, product_id):
     })
 
 
+@login_required(login_url='/login/')  
 def user_reservations(request):
     reservations = Reservation.objects.filter(user=request.user)
     return render(request, 'user_reservations.html', {'reservations': reservations})
+
+
+@login_required(login_url='/login/')  # اضف هذا الديكور
+def delete_reservation(request, reservation_id):
+    if request.method == 'POST':
+        reservation = get_object_or_404(Reservation, id=reservation_id)
+        
+        if reservation.user == request.user:  # تحقق من ملكية الحجز
+            if reservation.can_delete(request.user):  # استخدم الدالة المضافة
+                reservation.delete()
+                messages.success(request, 'تم حذف الحجز بنجاح')
+            else:
+                messages.error(request, 'لا يمكن حذف الحجز بعد تاريخ الوصول')
+        else:
+            messages.error(request, 'ليس لديك صلاحية لهذا الإجراء')
+            
+    return redirect('user_reservations')

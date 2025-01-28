@@ -242,7 +242,7 @@ function calculatePrice() {
 
     if (diffDays > 0) {
       document.getElementById('qty-cart').value = diffDays;
-      document.getElementById('total-price').textContent = '$' + (pricePerDay * diffDays).toFixed(2);
+      document.getElementById('total-price').textContent = 'LYD' + (pricePerDay * diffDays).toFixed(2);
     } else {
       alert('تاريخ المغادرة يجب أن يكون بعد تاريخ الوصول!');
       document.getElementById('checkout-date').value = '';

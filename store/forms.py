@@ -8,32 +8,35 @@ from .models import Product,Category, City,Reservation
 
 class ProductForm(forms.ModelForm):
     name = forms.CharField(
-        label="Product Name", 
+        label="اسم الإعلان", 
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter product name'})
     )
     price = forms.DecimalField(
-        label="Price", 
+        label="السعر", 
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter product price'})
     )
     category = forms.ModelChoiceField(
         queryset=Category.objects.all(),
-        label="Category", 
+        label="الفئه", 
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     description = forms.CharField(
-        label="Description", 
+        label="الوصف", 
         widget=forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Enter product description', 'rows': 4})
     )
     image = forms.ImageField(
-        label="Image", 
+        label="إدراج صور", 
         widget=forms.ClearableFileInput(attrs={'class': 'form-control'})
     )
     city = forms.ModelChoiceField(
         queryset=City.objects.all(),  # جلب المدن المتاحة
-        label="City", 
+        label="المدينه", 
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-
+    phone_number = forms.CharField(
+        label="رقم الهاتف", 
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter your phone number'})
+    )
     class Meta:
         model = Product
         fields = ['name', 'price', 'category', 'description', 'image', 'city','phone_number']
@@ -43,17 +46,17 @@ class ProductForm(forms.ModelForm):
 
 
 class UserInfoForm(forms.ModelForm):
-	phone = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Phone'}), required=False)
-	address1 = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Address 1'}), required=False)
-	address2 = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Address 2'}), required=False)
-	city = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'City'}), required=False)
-	state = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'State'}), required=False)
-	zipcode = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Zipcode'}), required=False)
-	country = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Country'}), required=False)
+	phone = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'رقم الهاتف'}), required=False)
+	address1 = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'العنوان 1'}), required=False)
+	address2 = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'العنوان 2'}), required=False)
+	city = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'المدينه'}), required=False)
+#	state = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'State'}), required=False)
+	#zipcode = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Zipcode'}), required=False)
+	country = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'البلد'}), required=False)
 
 	class Meta:
 		model = Profile
-		fields = ('phone', 'address1', 'address2', 'city', 'state', 'zipcode', 'country', )
+		fields = ('phone', 'address1', 'address2', 'city',  'country', )
 
 
 
